@@ -324,17 +324,19 @@ CONTAINER : StatefulContainer<T> {
         val currentDisplacement =
             taskBeingDragged.secondaryDismissTranslationProperty.get(taskBeingDragged)
         val task = taskBeingDragged.firstTask
-        val isAppLocked = task?.let {
-            RecentHelper.getInstance().isAppLocked(it.key.getPackageName(), recentsView.context)
+        // App Lock masking is visual only; legacy recents lock still blocks swipe-to-dismiss.
+        val blockSwipeDismiss = task?.let {
+            RecentHelper.getInstance().isLegacyRecentsLocked(
+                it.key.getPackageName(), recentsView.context)
         } ?: false
         val isBeyondDismissThreshold =
             abs(currentDisplacement) > abs(DISMISS_THRESHOLD_FRACTION * dismissLength)
         val velocityIsGoingUp = recentsView.pagedOrientationHandler.isGoingUp(velocity, isRtl)
-                && !isAppLocked
+                && !blockSwipeDismiss
         val isFlingingTowardsDismiss = detector.isFling(velocity) && velocityIsGoingUp
         val isFlingingTowardsRestState = detector.isFling(velocity) && !velocityIsGoingUp
         isDismissing =
-            !isAppLocked && (allowDetach && isFlingingTowardsDismiss ||
+            !blockSwipeDismiss && (allowDetach && isFlingingTowardsDismiss ||
                 (isBeyondDismissThreshold && !isFlingingTowardsRestState))
         val dismissThreshold = (DISMISS_THRESHOLD_FRACTION * dismissLength * verticalFactor).toInt()
         val finalPosition = if (isDismissing) (dismissLength * verticalFactor).toFloat() else 0f

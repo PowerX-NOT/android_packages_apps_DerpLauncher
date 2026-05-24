@@ -38,6 +38,7 @@ import com.android.quickstep.TaskOverlayFactory
 import com.android.quickstep.recents.di.RecentsDependencies
 import com.android.quickstep.recents.di.get
 import com.android.quickstep.recents.ui.viewmodel.GroupedTaskViewModel
+import com.android.quickstep.util.RecentHelper
 import com.android.quickstep.util.RecentsOrientedState
 import com.android.quickstep.util.SplitSelectStateController
 import com.android.quickstep.util.SplitTask
@@ -170,6 +171,11 @@ class GroupedTaskView @JvmOverloads constructor(context: Context, attrs: Attribu
         this.splitBoundsConfig = splitTask.splitBounds
         taskContainers.forEach { it.digitalWellBeingToast?.splitBounds = splitBoundsConfig }
         onBind(orientedState)
+        val anyRecentsMasked = taskContainers.any { container ->
+            val pkg = container.task.key.getPackageName() ?: return@any false
+            RecentHelper.getInstance().shouldMaskInRecents(pkg, context)
+        }
+        updateLockedView(anyRecentsMasked)
     }
 
     override fun setOrientationState(orientationState: RecentsOrientedState) {

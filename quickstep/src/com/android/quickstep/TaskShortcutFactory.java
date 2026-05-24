@@ -743,11 +743,12 @@ public interface TaskShortcutFactory {
                                                  TaskContainer taskContainer) {
             TaskView taskView = taskContainer.getTaskView();
             Task task = taskContainer.getTask();
-            boolean isLocked = RecentHelper.getInstance().isAppLocked(task.key.getPackageName(), taskView.getContext());
+            boolean isLegacyLocked = RecentHelper.getInstance().isLegacyRecentsLocked(
+                    task.key.getPackageName(), taskView.getContext());
 
             return Collections.singletonList(new LockedSystemShortcut(
-                    isLocked ? R.drawable.ic_protected_unlocked : R.drawable.ic_protected_locked,
-                    isLocked ? R.string.task_menu_item_unlock : R.string.task_menu_item_lock,
+                    isLegacyLocked ? R.drawable.ic_protected_unlocked : R.drawable.ic_protected_locked,
+                    isLegacyLocked ? R.string.task_menu_item_unlock : R.string.task_menu_item_lock,
                     container, taskContainer.getItemInfo(), taskContainer.getTaskView(), taskView));
         }
 
@@ -783,7 +784,8 @@ public interface TaskShortcutFactory {
         }
 
         static void getLockTask(Task task, TaskView tv){
-            boolean isLocked = !RecentHelper.getInstance().isAppLocked(task.key.getPackageName(), tv.getContext());
+            boolean isLocked = !RecentHelper.getInstance().isLegacyRecentsLocked(
+                    task.key.getPackageName(), tv.getContext());
             StringBuilder sb = new StringBuilder();
             sb.append("Lock Click# id: ");
             sb.append(task.key.id);

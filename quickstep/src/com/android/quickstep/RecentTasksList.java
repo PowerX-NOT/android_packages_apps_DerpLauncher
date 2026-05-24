@@ -45,6 +45,7 @@ import com.android.launcher3.util.LooperExecutor;
 import com.android.quickstep.util.DesktopTask;
 import com.android.quickstep.util.ExternalDisplaysKt;
 import com.android.quickstep.util.GroupTask;
+import com.android.quickstep.util.RecentHelper;
 import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitTask;
 import com.android.systemui.shared.recents.model.Task;
@@ -435,13 +436,13 @@ public class RecentTasksList {
                 final TaskInfo taskInfo1 = rawTask.getBaseGroupedTask().getTaskInfo1();
                 final Task.TaskKey task1Key = createTaskKey(taskInfo1);
                 final Task task1 = Task.from(task1Key, taskInfo1,
-                        tmpLockedUsers.get(task1Key.userId) /* isLocked */);
+                        computeTaskLocked(task1Key, tmpLockedUsers));
 
                 if (rawTask.isBaseType(TYPE_SPLIT)) {
                     final TaskInfo taskInfo2 = rawTask.getBaseGroupedTask().getTaskInfo2();
                     final Task.TaskKey task2Key = createTaskKey(taskInfo2);
                     final Task task2 = Task.from(task2Key, taskInfo2,
-                            tmpLockedUsers.get(task2Key.userId) /* isLocked */);
+                            computeTaskLocked(task2Key, tmpLockedUsers));
                     allTasks.add(new SplitTask(task1, task2,
                             rawTask.getBaseGroupedTask().getSplitBounds()));
                 } else {
@@ -454,7 +455,7 @@ public class RecentTasksList {
                 Task task1 = loadKeysOnly
                         ? new Task(task1Key)
                         : Task.from(task1Key, taskInfo1,
-                                tmpLockedUsers.get(task1Key.userId) /* isLocked */);
+                                computeTaskLocked(task1Key, tmpLockedUsers));
                 Task task2 = null;
                 if (taskInfo2 != null) {
                     // Is split task
@@ -462,7 +463,7 @@ public class RecentTasksList {
                     task2 = loadKeysOnly
                             ? new Task(task2Key)
                             : Task.from(task2Key, taskInfo2,
-                                    tmpLockedUsers.get(task2Key.userId) /* isLocked */);
+                                    computeTaskLocked(task2Key, tmpLockedUsers));
                 } else {
                     // Is fullscreen task
                     if (isFirstVisibleTaskFound) {
@@ -488,6 +489,15 @@ public class RecentTasksList {
         }
 
         return allTasks;
+    }
+
+    /** Device keyguard lock and/or masked apps (App Lock + legacy recents lock). */
+    private boolean computeTaskLocked(Task.TaskKey key, SparseBooleanArray tmpLockedUsers) {
+        String pkg = key.getPackageName();
+        if (pkg != null && RecentHelper.getInstance().shouldMaskInRecents(pkg, mContext)) {
+            return true;
+        }
+        return tmpLockedUsers.get(key.userId);
     }
 
     private Task createTask(TaskInfo taskInfo, Set<Integer> minimizedTaskIds) {

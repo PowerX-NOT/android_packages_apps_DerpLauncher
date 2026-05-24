@@ -198,6 +198,7 @@
     <!-- Task lock -->
     <string name="task_menu_item_unlock">Unlock</string>
     <string name="task_menu_item_lock">Lock</string>
+    <string name="app_lock_recents_locked_label">App locked</string>
 
     <!-- A widget category label for grouping widgets related to battery. [CHAR_LIMIT=30] -->
     <string name="widget_category_battery">Battery</string>

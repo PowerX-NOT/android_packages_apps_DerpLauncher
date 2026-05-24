@@ -235,6 +235,7 @@ import com.android.quickstep.util.GroupTask;
 import com.android.quickstep.util.LayoutUtils;
 import com.android.quickstep.util.RecentHelper;
 import com.android.quickstep.util.RecentsAtomicAnimationFactory;
+import com.android.quickstep.util.RecentHelper;
 import com.android.quickstep.util.RecentsOrientedState;
 import com.android.quickstep.util.SingleTask;
 import com.android.quickstep.util.SplitAnimationController.Companion.SplitAnimInitProps;
@@ -1296,6 +1297,8 @@ public abstract class RecentsView<
         if (mDesktopVisibilityController != null) {
             mDesktopVisibilityController.registerDesktopVisibilityListener(mUtils);
         }
+        RecentHelper.getInstance().registerAppLockListener(mContext, this::invalidateTaskList);
+        RecentHelper.getInstance().registerLegacyLockListener(mContext, this::invalidateTaskList);
     }
 
     @Override

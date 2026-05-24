@@ -25,6 +25,8 @@ import android.app.ActivityTaskManager.INVALID_TASK_ID
 import android.app.WindowConfiguration.WINDOWING_MODE_FULLSCREEN
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Outline
+import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.drawable.Drawable
@@ -34,9 +36,12 @@ import android.util.FloatProperty
 import android.util.Log
 import android.view.Display
 import android.view.MotionEvent
+import android.view.LayoutInflater
+import android.view.Gravity
 import android.view.View
 import android.view.View.OnClickListener
 import android.view.ViewGroup
+import android.view.ViewOutlineProvider
 import android.view.ViewStub
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.FrameLayout
@@ -323,6 +328,8 @@ constructor(
         protected set
 
     private var mLockedView: ImageView? = null
+    private var mAppLockOverlay: View? = null
+    private val mContainerAppLockOverlays = mutableMapOf<Int, View>()
 
     lateinit var orientedState: RecentsOrientedState
 
@@ -738,6 +745,7 @@ constructor(
             this.bottom = height
         }
         getThumbnailBounds(thumbnailBounds)
+        updateAppLockOverlaysLayout()
     }
 
     private fun updatePivots() {
@@ -880,6 +888,7 @@ constructor(
         inflateViewStubs()
         taskDismissButton = findViewById(R.id.task_dismiss_button)
         mLockedView = findViewById(R.id.dis_lock)
+        mAppLockOverlay = findViewById(R.id.app_lock_overlay)
     }
 
     fun onIntersectScreenEdgeChanged(intersectsScreenEdge: Boolean) {
@@ -994,10 +1003,11 @@ constructor(
 
                 val dismissTaskViewOnClick: (View) -> Unit = {
                     val task = container.task
-                    val isAppLocked = task?.let {
-                        RecentHelper.getInstance().isAppLocked(it.key.getPackageName(), context)
+                    val blockDismiss = task?.let {
+                        RecentHelper.getInstance().isLegacyRecentsLocked(
+                            it.key.getPackageName(), context)
                     } ?: false
-                    if (!isAppLocked) {
+                    if (!blockDismiss) {
                         recentsView?.dismissTaskView(
                             container.taskView,
                             /* animateTaskView = */ true,
@@ -1129,7 +1139,11 @@ constructor(
         cancelPendingLoadTasks()
         this.orientedState = orientedState // Needed for dependencies
         val task = singleTask.task
-        val isLocked = RecentHelper.getInstance().isAppLocked(task.key.getPackageName(), context)
+        val isRecentsMasked =
+            RecentHelper.getInstance().shouldMaskInRecents(task.key.getPackageName(), context)
+        if (isRecentsMasked) {
+            task.isLocked = true
+        }
         taskContainers =
             listOf(
                 createTaskContainer(
@@ -1143,7 +1157,7 @@ constructor(
                     taskOverlayFactory,
                 )
             )
-        updateLockedView(isLocked)
+        updateLockedView(isRecentsMasked)
         onBind(orientedState)
     }
 
@@ -1428,8 +1442,15 @@ constructor(
             taskContainer.iconView.setText(taskContainer.task.title)
         }
         taskContainer.digitalWellBeingToast?.initialize()
-        val isLocked = RecentHelper.getInstance().isAppLocked(taskContainer.task.key.getPackageName(), context)
-        updateLockedView(isLocked)
+        val isRecentsMasked =
+            RecentHelper.getInstance().shouldMaskInRecents(
+                taskContainer.task.key.getPackageName(),
+                context,
+            )
+        if (isRecentsMasked) {
+            taskContainer.task.isLocked = true
+        }
+        updateLockedView(isRecentsMasked)
     }
 
     protected open fun onIconUnloaded(taskContainer: TaskContainer) {
@@ -2150,9 +2171,12 @@ constructor(
             }
         }
         val task = taskContainers.firstOrNull()?.task
-        if (task != null && mLockedView != null) {
-            val taskLockState = TaskUtilLockState.getTaskLockState(context, task.key.baseIntent.getComponent(), task.key)
-            mLockedView?.visibility = if (taskLockState && fullscreenProgress < 1) VISIBLE else INVISIBLE
+        if (task != null) {
+            val pkg = task.key.getPackageName()
+            val appLockMasked =
+                pkg != null && RecentHelper.getInstance().shouldMaskInRecents(pkg, context)
+            mAppLockOverlay?.visibility =
+                if (appLockMasked && fullscreenProgress < 1f) VISIBLE else GONE
         }
         taskContainers.forEach { it.overlay.setFullscreenProgress(fullscreenProgress) }
         updateSettledProgressFullscreen(fullscreenProgress)
@@ -2165,30 +2189,149 @@ constructor(
     }
 
     fun updateLockedView(isLock: Boolean, isState: Boolean = true) {
-        if (mLockedView == null) {
-            Log.d(TAG, "updateLockedView: mLockedView is null.")
-            return
-        }
         if (!::taskContainers.isInitialized) {
-            mLockedView?.visibility = if (isLock) VISIBLE else INVISIBLE
+            mAppLockOverlay?.visibility = if (isLock) VISIBLE else GONE
             return
         }
-        val task = taskContainers.firstOrNull()?.task
-        if (task == null || task.key == null || !isState) {
-            mLockedView?.visibility = if (isLock) VISIBLE else INVISIBLE
+        if (type == TaskViewType.GROUPED) {
+            mAppLockOverlay?.visibility = GONE
+            mLockedView?.visibility = INVISIBLE
+            taskContainers.forEach { container ->
+                val pkg = container.task.key.getPackageName() ?: return@forEach
+                val masked = RecentHelper.getInstance().shouldMaskInRecents(pkg, context)
+                if (masked) {
+                    container.task.isLocked = true
+                } else {
+                    container.task.isLocked = false
+                }
+                setContainerAppLockOverlay(container, masked)
+            }
             return
         }
-        if (isLock == (mLockedView?.visibility != VISIBLE)) {
-            val taskLockState = TaskUtilLockState.getTaskLockState(context, task.key.baseIntent.getComponent(), task.key)
-            Log.d(TAG, "updateLockedView: update task lockState: $isState -> $taskLockState , task.key.id: ${task.key.id}")
-            mLockedView?.visibility = if (taskLockState) VISIBLE else INVISIBLE
-        } else {
-            mLockedView?.visibility = if (isLock) VISIBLE else INVISIBLE
+        val task = taskContainers.firstOrNull()?.task ?: return
+        val pkg = task.key.getPackageName()
+        val masked =
+            if (pkg != null) RecentHelper.getInstance().shouldMaskInRecents(pkg, context) else false
+        task.isLocked = masked
+        mAppLockOverlay?.visibility = if (masked) VISIBLE else GONE
+        mLockedView?.visibility = INVISIBLE
+        if (masked) {
+            updateAppLockOverlaysLayout()
         }
     }
 
     fun updateLockedView(isLock: Boolean) {
         updateLockedView(isLock, true)
+    }
+
+    private fun setContainerAppLockOverlay(container: TaskContainer, show: Boolean) {
+        val taskId = container.task.key.id
+        if (!show) {
+            mContainerAppLockOverlays[taskId]?.visibility = GONE
+            return
+        }
+        var overlay = mContainerAppLockOverlays[taskId]
+        if (overlay == null) {
+            val parent = container.snapshotView.parent as? ViewGroup
+                ?: container.taskContentView.parent as? ViewGroup
+                ?: return
+            overlay = LayoutInflater.from(context)
+                .inflate(R.layout.app_lock_recents_overlay, parent, false)
+            val snapshotIndex = parent.indexOfChild(container.snapshotView)
+            parent.addView(overlay, snapshotIndex + 1)
+            mContainerAppLockOverlays[taskId] = overlay
+        }
+        overlay.visibility = VISIBLE
+        layoutAppLockOverlayForContainer(overlay, container)
+        applyAppLockOverlayShape(overlay)
+    }
+
+    private fun updateAppLockOverlaysLayout() {
+        mAppLockOverlay?.takeIf { it.visibility == VISIBLE }?.let { overlay ->
+            taskContainers.firstOrNull()?.let { layoutAppLockOverlayForContainer(overlay, it) }
+            applyAppLockOverlayShape(overlay)
+        }
+        mContainerAppLockOverlays.forEach { (taskId, overlay) ->
+            if (overlay.visibility != VISIBLE) return@forEach
+            taskContainers.find { it.task.key.id == taskId }?.let { container ->
+                layoutAppLockOverlayForContainer(overlay, container)
+                applyAppLockOverlayShape(overlay)
+            }
+        }
+    }
+
+    private fun layoutAppLockOverlayForContainer(overlay: View, container: TaskContainer) {
+        val snapshot = container.snapshotView
+        val snapshotParent = snapshot.parent as? ViewGroup ?: return
+        if (overlay.parent == snapshotParent) {
+            val sourceLp = snapshot.layoutParams
+            overlay.layoutParams =
+                when (sourceLp) {
+                    is ViewGroup.MarginLayoutParams ->
+                        ViewGroup.MarginLayoutParams(sourceLp)
+                    else -> ViewGroup.LayoutParams(sourceLp)
+                }
+            overlay.x = snapshot.x
+            overlay.y = snapshot.y
+            return
+        }
+        val bounds = Rect()
+        getBoundsRelativeToSelf(snapshot, bounds)
+        overlay.updateLayoutParams<LayoutParams> {
+            width = bounds.width()
+            height = bounds.height()
+            leftMargin = bounds.left
+            topMargin = bounds.top
+            gravity = Gravity.START or Gravity.TOP
+        }
+    }
+
+    private fun getBoundsRelativeToSelf(child: View, out: Rect) {
+        var view: View? = child
+        var left = 0f
+        var top = 0f
+        while (view != null && view !== this) {
+            left += view.left + view.translationX
+            top += view.top + view.translationY
+            view = view.parent as? View
+        }
+        out.set(
+            left.toInt(),
+            top.toInt(),
+            (left + child.width * child.scaleX).toInt(),
+            (top + child.height * child.scaleY).toInt(),
+        )
+    }
+
+    private fun applyAppLockOverlayShape(overlay: View) {
+        val radius = thumbnailFullscreenParams.currentCornerRadius
+        overlay.clipToOutline = true
+        overlay.outlineProvider =
+            object : ViewOutlineProvider() {
+                private val outlinePath = Path()
+
+                override fun getOutline(view: View, outline: Outline) {
+                    if (view.width <= 0 || view.height <= 0) {
+                        return
+                    }
+                    val scaleX = if (view.scaleX != 0f) view.scaleX else 1f
+                    val scaleY = if (view.scaleY != 0f) view.scaleY else 1f
+                    outlinePath.apply {
+                        rewind()
+                        addRoundRect(
+                            0f,
+                            0f,
+                            view.width.toFloat(),
+                            view.height.toFloat(),
+                            radius / scaleX,
+                            radius / scaleY,
+                            Path.Direction.CW,
+                        )
+                    }
+                    outline.setPath(outlinePath)
+                }
+            }
+        overlay.invalidateOutline()
     }
 
     protected open fun updateFullscreenParams() {
@@ -2204,6 +2347,7 @@ constructor(
             }
             it.overlay.setFullscreenParams(thumbnailFullscreenParams)
         }
+        updateAppLockOverlaysLayout()
     }
 
     protected fun updateFullscreenParams(fullscreenParams: FullscreenDrawParams) {

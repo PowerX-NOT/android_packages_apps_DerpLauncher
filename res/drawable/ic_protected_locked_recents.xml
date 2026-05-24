@@ -1,33 +1,20 @@
 <!--
-     Recents App Lock mask icon: rounded app frame with padlock at bottom-right.
+     Recents App Lock mask icon.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="48dp"
     android:height="48dp"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
-
-    <!-- App window frame (open at bottom-right for the lock). -->
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M12,20 V30 Q12,34 16,34 H22"
-        android:strokeWidth="2"
-        android:strokeColor="@android:color/white"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-    <path
-        android:fillColor="@android:color/transparent"
-        android:pathData="M12,20 Q12,16 16,16 H28 Q32,16 32,20 V26"
-        android:strokeWidth="2"
-        android:strokeColor="@android:color/white"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round" />
-
-    <!-- Padlock body -->
-    <path
-        android:fillColor="@android:color/white"
-        android:pathData="M26,25 C26,23.34 27.34,22 29,22 H31 C32.66,22 34,23.34 34,25 V27 H35 C35.83,27 36.5,27.67 36.5,28.5 V37.5 C36.5,38.33 35.83,39 35,39 H25 C24.17,39 23.5,38.33 23.5,37.5 V28.5 C23.5,27.67 24.17,27 25,27 H26 V25 Z M28,27 H32 V25 C32,24.45 31.55,24 31,24 H29 C28.45,24 28,24.45 28,25 V27 Z" />
-    <path
-        android:fillColor="@android:color/white"
-        android:pathData="M30,32 m-1.25,0 a1.25,1.25 0,1 1,2.5 0 a1.25,1.25 0,1 1,-2.5 0" />
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <group
+        android:translateX="2"
+        android:translateY="2">
+        <path
+            android:fillColor="@android:color/transparent"
+            android:pathData="M3.75 10.625v6.25A1.25 1.25 0 0 0 5 18.125h10a1.25 1.25 0 0 0 1.25 -1.25v-6.25A1.25 1.25 0 0 0 15 9.375H5a1.25 1.25 0 0 0 -1.25 1.25M10 15v-2.5m3.125 -3.125V5a3.125 3.125 0 0 0 -6.25 0v4.375"
+            android:strokeColor="#535358"
+            android:strokeWidth="1.25"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round" />
+    </group>
 </vector>

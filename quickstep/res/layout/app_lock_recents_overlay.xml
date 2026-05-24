@@ -13,26 +13,29 @@
     android:background="@color/app_lock_recents_overlay_scrim">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="@dimen/app_lock_recents_overlay_icon_size"
-            android:layout_height="@dimen/app_lock_recents_overlay_icon_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:adjustViewBounds="true"
             android:contentDescription="@null"
             android:importantForAccessibility="no"
-            android:src="@drawable/ic_protected_locked_recents"
-            android:tint="@color/app_lock_recents_overlay_tint" />
+            android:scaleType="center"
+            android:src="@drawable/ic_protected_locked_recents" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:layout_marginTop="@dimen/app_lock_recents_overlay_label_margin_top"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="sans-serif"
+            android:gravity="center_horizontal"
             android:text="@string/app_lock_recents_locked_label"
+            android:textAlignment="center"
             android:textColor="@color/app_lock_recents_overlay_tint"
             android:textSize="@dimen/app_lock_recents_overlay_label_text_size" />
     </LinearLayout>

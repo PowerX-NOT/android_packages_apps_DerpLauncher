@@ -82,7 +82,7 @@
     <!-- Recents overview -->
     <color name="recents_filter_icon">#333333</color>
     <color name="app_lock_recents_overlay_scrim">#FF000000</color>
-    <color name="app_lock_recents_overlay_tint">#FFB0B0B0</color>
+    <color name="app_lock_recents_overlay_tint">#FF535358</color>
 
     <!-- Lottie light theme colors. -->
     <color name="lottie_blue400">#669df6</color>

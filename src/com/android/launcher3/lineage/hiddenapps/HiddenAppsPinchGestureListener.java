@@ -15,7 +15,8 @@ import com.android.launcher3.LauncherState;
  */
 public class HiddenAppsPinchGestureListener {
 
-    private static final float SPREAD_TRIGGER_RATIO = 1.25f;
+    private static final float SPREAD_TRIGGER_RATIO = 1.10f;
+    private static final float MIN_SPREAD_DELTA_PX = 80f;
 
     private final Launcher mLauncher;
     private float mInitialSpan = -1f;
@@ -39,9 +40,15 @@ public class HiddenAppsPinchGestureListener {
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
+                if (!mTracking && ev.getPointerCount() >= 2) {
+                    mInitialSpan = span(ev);
+                    mTracking = mInitialSpan > 0;
+                }
                 if (mTracking && ev.getPointerCount() >= 2) {
                     float span = span(ev);
-                    if (mInitialSpan > 0 && span >= mInitialSpan * SPREAD_TRIGGER_RATIO) {
+                    if (mInitialSpan > 0
+                            && span >= mInitialSpan * SPREAD_TRIGGER_RATIO
+                            && (span - mInitialSpan) >= MIN_SPREAD_DELTA_PX) {
                         mTracking = false;
                         openHiddenDrawer();
                         return true;

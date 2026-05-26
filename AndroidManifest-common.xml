@@ -281,5 +281,12 @@
             android:label="@string/trust_apps_manager_name"
             android:theme="@android:style/Theme.DeviceDefault.Settings"
             android:autoRemoveFromRecents="true" />
+
+        <activity
+            android:name="com.android.launcher3.lineage.hiddenapps.HiddenAppsDrawerActivity"
+            android:label="@string/hidden_apps_drawer_title"
+            android:theme="@android:style/Theme.DeviceDefault.Settings"
+            android:autoRemoveFromRecents="true"
+            android:excludeFromRecents="true" />
     </application>
 </manifest>

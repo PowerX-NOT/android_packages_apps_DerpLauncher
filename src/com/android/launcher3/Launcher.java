@@ -861,6 +861,10 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     private void handleActivityResult(
             final int requestCode, final int resultCode, final Intent data) {
+        if (com.android.launcher3.lineage.hiddenapps.HiddenAppsDrawerAuth.handleActivityResult(
+                this, requestCode, resultCode)) {
+            return;
+        }
         if (isWorkspaceLoading()) {
             // process the result once the workspace has loaded.
             mPendingActivityResult = new ActivityResultInfo(requestCode, resultCode, data);

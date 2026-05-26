@@ -43,6 +43,7 @@ import com.android.launcher3.CellLayout;
 import com.android.launcher3.DeviceProfile;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.Workspace;
+import com.android.launcher3.lineage.hiddenapps.HiddenAppsPinchGestureListener;
 import com.android.launcher3.dragndrop.DragLayer;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.testing.TestLogging;
@@ -75,10 +76,12 @@ public class WorkspaceTouchListener extends GestureDetector.SimpleOnGestureListe
     private int mLongPressState = STATE_CANCELLED;
 
     private final GestureDetector mGestureDetector;
+    private final HiddenAppsPinchGestureListener mHiddenAppsGesture;
 
     public WorkspaceTouchListener(Launcher launcher, Workspace<?> workspace) {
         mLauncher = launcher;
         mWorkspace = workspace;
+        mHiddenAppsGesture = new HiddenAppsPinchGestureListener(launcher);
         // Use twice the touch slop as we are looking for long press which is more
         // likely to cause movement.
         mTouchSlop = 2 * ViewConfiguration.get(launcher).getScaledTouchSlop();
@@ -87,6 +90,9 @@ public class WorkspaceTouchListener extends GestureDetector.SimpleOnGestureListe
 
     @Override
     public boolean onTouch(View view, MotionEvent ev) {
+        if (mHiddenAppsGesture.onTouchEvent(ev)) {
+            return true;
+        }
         mGestureDetector.onTouchEvent(ev);
         mWorkspace.checkDoubleTap(ev);
 

@@ -15,29 +15,30 @@
  */
 package com.android.launcher3.lineage.trust;
 
+import android.app.HiddenAppsManager;
 import android.content.ComponentName;
 import android.content.Context;
 
 import com.android.launcher3.dagger.ApplicationContext;
 
 import com.android.launcher3.AppFilter;
-import com.android.launcher3.lineage.trust.db.TrustDatabaseHelper;
 
 import javax.inject.Inject;
 
 @SuppressWarnings("unused")
 public class HiddenAppsFilter extends AppFilter {
-    private TrustDatabaseHelper mDbHelper;
 
     @Inject
     public HiddenAppsFilter(@ApplicationContext Context context) {
         super(context);
-
-        mDbHelper = TrustDatabaseHelper.getInstance(context);
     }
 
     @Override
     public boolean shouldShowApp(ComponentName app) {
-        return !mDbHelper.isPackageHidden(app.getPackageName()) && super.shouldShowApp(app);
+        HiddenAppsManager manager = mContext.getSystemService(HiddenAppsManager.class);
+        if (manager != null && manager.shouldHideFromLauncher(app.getPackageName())) {
+            return false;
+        }
+        return super.shouldShowApp(app);
     }
 }

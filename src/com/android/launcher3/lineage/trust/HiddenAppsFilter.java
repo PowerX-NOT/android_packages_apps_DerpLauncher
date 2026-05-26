@@ -28,9 +28,12 @@ import javax.inject.Inject;
 @SuppressWarnings("unused")
 public class HiddenAppsFilter extends AppFilter {
 
+    private final Context mContext;
+
     @Inject
     public HiddenAppsFilter(@ApplicationContext Context context) {
         super(context);
+        mContext = context;
     }
 
     @Override

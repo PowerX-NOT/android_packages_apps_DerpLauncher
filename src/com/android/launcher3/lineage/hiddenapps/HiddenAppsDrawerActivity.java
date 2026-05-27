@@ -5,6 +5,7 @@ package com.android.launcher3.lineage.hiddenapps;
 
 import android.app.Activity;
 import android.app.HiddenAppsManager;
+import android.util.Log;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -26,6 +27,8 @@ import java.util.List;
 
 /** Authenticated drawer listing hidden apps the user can launch. */
 public class HiddenAppsDrawerActivity extends Activity {
+
+    private static final String TAG = "HiddenApps.Drawer";
 
     private RecyclerView mRecyclerView;
     private LinearLayout mLoadingView;
@@ -109,6 +112,8 @@ public class HiddenAppsDrawerActivity extends Activity {
             return;
         }
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        launch.putExtra(HiddenAppsManager.EXTRA_ALLOW_HIDDEN_LAUNCH, true);
+        Log.i(TAG, "launch hidden pkg=" + entry.packageName);
         startActivity(launch);
         finish();
     }

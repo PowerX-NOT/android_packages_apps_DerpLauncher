@@ -18,6 +18,7 @@ package com.android.launcher3.lineage.trust;
 import android.app.HiddenAppsManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.util.Log;
 
 import com.android.launcher3.dagger.ApplicationContext;
 
@@ -27,6 +28,8 @@ import javax.inject.Inject;
 
 @SuppressWarnings("unused")
 public class HiddenAppsFilter extends AppFilter {
+
+    private static final String TAG = "HiddenApps.Filter";
 
     private final Context mContext;
 
@@ -40,6 +43,8 @@ public class HiddenAppsFilter extends AppFilter {
     public boolean shouldShowApp(ComponentName app) {
         HiddenAppsManager manager = mContext.getSystemService(HiddenAppsManager.class);
         if (manager != null && manager.shouldHideFromLauncher(app.getPackageName())) {
+            Log.i(TAG, "hide launcher component=" + app + " mode="
+                    + manager.getHiddenMode(app.getPackageName()));
             return false;
         }
         return super.shouldShowApp(app);

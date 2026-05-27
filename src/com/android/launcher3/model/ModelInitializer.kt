@@ -51,6 +51,7 @@ import com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR
 import com.android.launcher3.util.PackageUserKey
 import com.android.launcher3.util.SettingsCache
 import com.android.launcher3.util.SettingsCache.NOTIFICATION_BADGING_URI
+import com.android.launcher3.lineage.hiddenapps.HiddenAppsModelObserver
 import com.android.launcher3.util.SettingsCache.PRIVATE_SPACE_HIDE_WHEN_LOCKED_URI
 import com.android.launcher3.util.SimpleBroadcastReceiver
 import com.android.launcher3.util.SimpleBroadcastReceiver.Companion.actionsFilter
@@ -156,6 +157,11 @@ constructor(
                 model.enqueueModelUpdateTask(homeScreenFilesChangedTask.create(it))
             }
         )
+
+        // Hidden apps configuration changes
+        val hiddenAppsObserver = HiddenAppsModelObserver(context, model, MODEL_EXECUTOR.handler)
+        hiddenAppsObserver.register()
+        lifeCycle.addCloseable { hiddenAppsObserver.unregister() }
     }
 
     fun initializeDisplayEvents(model: LauncherModel) {

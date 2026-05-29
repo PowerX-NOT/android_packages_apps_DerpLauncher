@@ -13,16 +13,24 @@
      See the License for the specific language governing permissions and
      limitations under the License.
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-
+    android:layout_height="match_parent">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/hidden_apps_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/hidden_apps_empty"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:padding="24dp"
+        android:text="@string/hidden_apps_drawer_empty"
+        android:textAppearance="?android:attr/textAppearanceMedium"
         android:visibility="gone" />
 
     <LinearLayout
@@ -49,4 +57,4 @@
             android:text="@string/trust_apps_loading"
             android:textSize="16sp" />
     </LinearLayout>
-</LinearLayout>
+</FrameLayout>

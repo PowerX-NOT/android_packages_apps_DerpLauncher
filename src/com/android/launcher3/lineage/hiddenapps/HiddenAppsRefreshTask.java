@@ -52,10 +52,8 @@ public final class HiddenAppsRefreshTask implements ModelUpdateTask {
         for (String pkg : mPackages) {
             if (manager.shouldHideFromLauncher(pkg)) {
                 toHide.add(pkg);
-                Log.i(TAG, "hide pkg=" + pkg + " mode=" + manager.getHiddenMode(pkg));
             } else {
                 toRestore.add(pkg);
-                Log.i(TAG, "restore pkg=" + pkg);
             }
         }
 
@@ -68,7 +66,6 @@ public final class HiddenAppsRefreshTask implements ModelUpdateTask {
             taskController.deleteAndBindComponentsRemoved(
                     ItemInfoMatcher.ofPackages(toHide, mUser),
                     "HiddenApps: package hidden from launcher");
-            Log.i(TAG, "removed from launcher pkgs=" + toHide);
         }
 
         for (String pkg : toRestore) {

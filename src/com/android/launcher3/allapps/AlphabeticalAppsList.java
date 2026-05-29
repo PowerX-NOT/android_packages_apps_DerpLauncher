@@ -43,6 +43,7 @@ import com.android.launcher3.allapps.BaseAllAppsAdapter.AdapterItem;
 import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.FolderInfo;
 import com.android.launcher3.model.data.ItemInfo;
+import com.android.launcher3.lineage.hiddenapps.HiddenAppsDrawerState;
 import com.android.launcher3.util.AppsListUtils;
 import com.android.launcher3.util.LabelComparator;
 import com.android.launcher3.views.ActivityContext;
@@ -248,6 +249,19 @@ public class AlphabeticalAppsList implements AllAppsStore.OnUpdateListener {
         // Sort the list of apps
         mApps.clear();
         mPrivateApps.clear();
+
+        // Hidden-apps drawer mode: show only hidden apps in the main all-apps grid.
+        if (HiddenAppsDrawerState.isActive() && mWorkProviderManager == null) {
+            Stream<AppInfo> hiddenStream = HiddenAppsDrawerState.getApps().stream();
+            if (mItemFilter != null) {
+                hiddenStream = hiddenStream.filter(mItemFilter);
+            }
+            hiddenStream.sorted(mAppNameComparator).forEachOrdered(mApps::add);
+            if (mSearchResults.isEmpty()) {
+                updateAdapterItems();
+            }
+            return;
+        }
 
         // Filter against private space app that may show outside of Private Profile.
         Stream<AppInfo> appSteam = Stream.of(mAllAppsStore.getApps()).filter(

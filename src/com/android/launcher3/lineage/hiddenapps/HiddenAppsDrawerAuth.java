@@ -4,14 +4,12 @@
 package com.android.launcher3.lineage.hiddenapps;
 
 import android.app.Activity;
-import android.content.Intent;
 
 import com.android.launcher3.Launcher;
 
-/** Handles auth result before opening {@link HiddenAppsDrawerActivity}. */
+/** Handles auth result before opening the hidden-apps drawer in launcher. */
 public final class HiddenAppsDrawerAuth {
 
-    public static final String EXTRA_HIDDEN_DRAWER = "hidden_drawer";
     public static final int REQUEST_HIDDEN_DRAWER = 0x4A50;
 
     private HiddenAppsDrawerAuth() {
@@ -22,7 +20,7 @@ public final class HiddenAppsDrawerAuth {
             return false;
         }
         if (resultCode == Activity.RESULT_OK) {
-            launcher.startActivity(new Intent(launcher, HiddenAppsDrawerActivity.class));
+            HiddenAppsDrawer.open(launcher);
         }
         return true;
     }

@@ -191,6 +191,8 @@ import com.android.launcher3.dragndrop.SystemDragController;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
 import com.android.launcher3.keyboard.ViewGroupFocusHelper;
+import com.android.launcher3.lineage.hiddenapps.HiddenAppsDrawer;
+import com.android.launcher3.lineage.hiddenapps.HiddenAppsDrawerAuth;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logger.LauncherAtom.ContainerInfo;
 import com.android.launcher3.logger.LauncherAtom.WorkspaceContainer;
@@ -861,8 +863,7 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     private void handleActivityResult(
             final int requestCode, final int resultCode, final Intent data) {
-        if (com.android.launcher3.lineage.hiddenapps.HiddenAppsDrawerAuth.handleActivityResult(
-                this, requestCode, resultCode)) {
+        if (HiddenAppsDrawerAuth.handleActivityResult(this, requestCode, resultCode)) {
             return;
         }
         if (isWorkspaceLoading()) {
@@ -1263,6 +1264,7 @@ public class Launcher extends StatefulActivity<LauncherState>
         if (ALL_APPS.equals(mPrevLauncherState) && !ALL_APPS.equals(state)
                 // Making sure mAllAppsSessionLogId is not null to avoid double logging.
                 && mAllAppsSessionLogId != null) {
+            HiddenAppsDrawer.deactivate(this);
             getAppsView().reset(false /* animate */, true /* clearScrim */);
             getAllAppsExitEvent().ifPresent(getStatsLogManager().logger()::log);
             mAllAppsSessionLogId = null;

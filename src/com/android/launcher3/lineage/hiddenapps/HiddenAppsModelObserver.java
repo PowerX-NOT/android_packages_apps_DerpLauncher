@@ -48,6 +48,9 @@ public final class HiddenAppsModelObserver extends ContentObserver {
         HiddenAppsManager manager = mContext.getSystemService(HiddenAppsManager.class);
         if (manager != null) {
             manager.registerHiddenAppsStateListener(mStateListener);
+            if (!HiddenAppsDrawerState.isActive()) {
+                manager.setAuthenticatedHiddenDrawerActive(false);
+            }
         }
         scheduleRefresh();
     }
@@ -57,6 +60,7 @@ public final class HiddenAppsModelObserver extends ContentObserver {
         HiddenAppsManager manager = mContext.getSystemService(HiddenAppsManager.class);
         if (manager != null) {
             manager.unregisterHiddenAppsStateListener(mStateListener);
+            manager.setAuthenticatedHiddenDrawerActive(false);
         }
     }
 

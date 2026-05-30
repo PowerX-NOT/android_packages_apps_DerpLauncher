@@ -31,10 +31,13 @@ public final class HiddenAppsDrawer {
             Toast.makeText(launcher, R.string.hidden_apps_drawer_empty, Toast.LENGTH_SHORT).show();
             return;
         }
+        // Enable PM bypass before loading so resolve/launch cannot race the async work.
+        setAuthenticatedHiddenDrawerActive(launcher, true);
         Executors.MODEL_EXECUTOR.execute(() -> {
             List<AppInfo> apps = loadHiddenApps(manager);
             Executors.MAIN_EXECUTOR.execute(() -> {
                 if (apps.isEmpty()) {
+                    setAuthenticatedHiddenDrawerActive(launcher, false);
                     Toast.makeText(launcher, R.string.hidden_apps_drawer_empty,
                             Toast.LENGTH_SHORT).show();
                     return;
@@ -55,8 +58,16 @@ public final class HiddenAppsDrawer {
             return;
         }
         HiddenAppsDrawerState.deactivate();
+        setAuthenticatedHiddenDrawerActive(launcher, false);
         launcher.getAppsView().getPersonalAppList().onAppsUpdated();
         launcher.setTitle(launcher.getString(R.string.all_apps_button_label));
+    }
+
+    private static void setAuthenticatedHiddenDrawerActive(Launcher launcher, boolean active) {
+        HiddenAppsManager manager = launcher.getSystemService(HiddenAppsManager.class);
+        if (manager != null) {
+            manager.setAuthenticatedHiddenDrawerActive(active);
+        }
     }
 
     private static List<AppInfo> loadHiddenApps(HiddenAppsManager manager) {

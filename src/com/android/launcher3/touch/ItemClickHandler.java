@@ -401,6 +401,7 @@ public class ItemClickHandler {
             throw new IllegalArgumentException("Input must have a valid intent");
         }
         if (HiddenAppsDrawerState.isActive()) {
+            intent = new Intent(intent);
             intent.putExtra(HiddenAppsManager.EXTRA_ALLOW_HIDDEN_LAUNCH, true);
         }
         if (item instanceof WorkspaceItemInfo) {

@@ -283,6 +283,12 @@ public class QuickstepModelDelegate extends ModelDelegate {
         }
     }
 
+    @Override
+    public void onHiddenAppsChanged() {
+        mAllPredictionAppsState.requestPredictionUpdate();
+        mHotseatPredictionState.requestPredictionUpdate();
+    }
+
     @WorkerThread
     @Override
     public void destroy() {

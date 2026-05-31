@@ -38,6 +38,7 @@ import com.android.launcher3.model.data.AppInfo;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.model.data.PredictedContainerInfo;
 import com.android.launcher3.model.data.PredictedItemInfo;
+import com.android.launcher3.lineage.trust.HiddenAppsFilter;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 
 import java.util.ArrayList;
@@ -83,9 +84,15 @@ public class PredictionUpdateTask implements ModelUpdateTask {
 
         List<ItemInfo> items = new ArrayList<>(mTargets.size());
         for (AppTarget target : mTargets) {
+            if (HiddenAppsFilter.shouldHidePackage(context, target.getPackageName())) {
+                continue;
+            }
             WorkspaceItemInfo itemInfo;
             ShortcutInfo si = target.getShortcutInfo();
             if (si != null) {
+                if (HiddenAppsFilter.shouldHidePackage(context, si.getPackage())) {
+                    continue;
+                }
                 usersForChangedShortcuts.add(si.getUserHandle());
                 itemInfo = new WorkspaceItemInfo(si, context);
                 iconCache.getShortcutIcon(itemInfo, si);

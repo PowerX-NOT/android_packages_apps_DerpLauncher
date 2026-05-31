@@ -677,6 +677,8 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
 
     @Override
     public void bindPredictedContainerInfo(PredictedContainerInfo info) {
+        info = com.android.launcher3.lineage.trust.HiddenAppsFilter.filterPredictedContainer(
+                this, info);
         super.bindPredictedContainerInfo(info);
         switch (info.id) {
             case Favorites.CONTAINER_ALL_APPS_PREDICTION:

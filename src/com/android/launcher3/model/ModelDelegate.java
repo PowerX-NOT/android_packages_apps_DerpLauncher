@@ -91,4 +91,7 @@ public class ModelDelegate {
     @WorkerThread
     public void destroy() { }
 
+    /** Called when hidden-app configuration changes and predictions may need refresh. */
+    public void onHiddenAppsChanged() { }
+
 }

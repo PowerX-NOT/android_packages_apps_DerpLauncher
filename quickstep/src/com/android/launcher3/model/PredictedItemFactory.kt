@@ -36,6 +36,7 @@ import com.android.launcher3.icons.cache.CacheLookupFlag
 import com.android.launcher3.model.data.AppInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.PredictedItemInfo
+import com.android.launcher3.lineage.trust.HiddenAppsFilter
 import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.pm.UserCache
 import com.android.launcher3.shortcuts.ShortcutKey
@@ -68,6 +69,10 @@ constructor(
 
     override fun createInfo(itemType: Int, user: UserHandle, intent: Intent): PredictedItemInfo? {
         if (readCount >= maxItemCount) {
+            return null
+        }
+        val packageName = intent.component?.packageName ?: intent.`package`
+        if (HiddenAppsFilter.shouldHidePackage(context, packageName)) {
             return null
         }
         return when (itemType) {

@@ -72,5 +72,7 @@ public final class HiddenAppsRefreshTask implements ModelUpdateTask {
             new PackageUpdatedTask(PackageUpdatedTask.OP_UPDATE, mUser, pkg)
                     .execute(taskController, dataModel, appsList);
         }
+
+        taskController.getModel().getModelDelegate().onHiddenAppsChanged();
     }
 }

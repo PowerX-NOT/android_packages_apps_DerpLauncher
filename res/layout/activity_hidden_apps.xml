@@ -23,16 +23,6 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/hidden_apps_empty"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:padding="24dp"
-        android:text="@string/hidden_apps_drawer_empty"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:visibility="gone" />
-
     <LinearLayout
         android:id="@+id/hidden_apps_loading"
         android:layout_width="match_parent"

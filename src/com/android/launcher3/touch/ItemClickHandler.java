@@ -28,7 +28,6 @@ import static com.android.launcher3.util.Executors.MAIN_EXECUTOR;
 import static com.android.launcher3.util.Executors.UI_HELPER_EXECUTOR;
 
 import android.app.AlertDialog;
-import android.app.HiddenAppsManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -51,7 +50,6 @@ import com.android.launcher3.R;
 import com.android.launcher3.apppairs.AppPairIcon;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
-import com.android.launcher3.lineage.hiddenapps.HiddenAppsDrawerState;
 import com.android.launcher3.lineage.trust.db.TrustDatabaseHelper;
 import com.android.launcher3.logging.InstanceId;
 import com.android.launcher3.logging.InstanceIdSequence;
@@ -399,10 +397,6 @@ public class ItemClickHandler {
         }
         if (intent == null) {
             throw new IllegalArgumentException("Input must have a valid intent");
-        }
-        if (HiddenAppsDrawerState.isActive()) {
-            intent = new Intent(intent);
-            intent.putExtra(HiddenAppsManager.EXTRA_ALLOW_HIDDEN_LAUNCH, true);
         }
         if (item instanceof WorkspaceItemInfo) {
             WorkspaceItemInfo si = (WorkspaceItemInfo) item;

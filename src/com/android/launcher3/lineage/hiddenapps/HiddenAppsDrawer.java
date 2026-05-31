@@ -31,7 +31,6 @@ public final class HiddenAppsDrawer {
             Toast.makeText(launcher, R.string.hidden_apps_drawer_empty, Toast.LENGTH_SHORT).show();
             return;
         }
-        // Enable PM bypass before loading so resolve/launch cannot race the async work.
         setAuthenticatedHiddenDrawerActive(launcher, true);
         Executors.MODEL_EXECUTOR.execute(() -> {
             List<AppInfo> apps = loadHiddenApps(manager);

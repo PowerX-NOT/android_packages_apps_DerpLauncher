@@ -12,7 +12,6 @@ import android.os.Process;
 import android.os.UserHandle;
 import android.provider.Settings;
 
-import com.android.internal.app.IHiddenAppsStateListener;
 import com.android.launcher3.LauncherModel;
 import com.android.launcher3.util.Executors;
 
@@ -25,13 +24,6 @@ public final class HiddenAppsModelObserver extends ContentObserver {
     private final Context mContext;
     private final LauncherModel mModel;
     private Set<String> mLastHiddenPackages = Set.of();
-
-    private final IHiddenAppsStateListener mStateListener = new IHiddenAppsStateListener.Stub() {
-        @Override
-        public void onHiddenAppsChanged() {
-            scheduleRefresh();
-        }
-    };
 
     public HiddenAppsModelObserver(Context context, LauncherModel model, Handler handler) {
         super(handler);
@@ -46,11 +38,8 @@ public final class HiddenAppsModelObserver extends ContentObserver {
                 this,
                 UserHandle.USER_ALL);
         HiddenAppsManager manager = mContext.getSystemService(HiddenAppsManager.class);
-        if (manager != null) {
-            manager.registerHiddenAppsStateListener(mStateListener);
-            if (!HiddenAppsDrawerState.isActive()) {
-                manager.setAuthenticatedHiddenDrawerActive(false);
-            }
+        if (manager != null && !HiddenAppsDrawerState.isActive()) {
+            manager.setAuthenticatedHiddenDrawerActive(false);
         }
         scheduleRefresh();
     }
@@ -59,7 +48,6 @@ public final class HiddenAppsModelObserver extends ContentObserver {
         mContext.getContentResolver().unregisterContentObserver(this);
         HiddenAppsManager manager = mContext.getSystemService(HiddenAppsManager.class);
         if (manager != null) {
-            manager.unregisterHiddenAppsStateListener(mStateListener);
             manager.setAuthenticatedHiddenDrawerActive(false);
         }
     }

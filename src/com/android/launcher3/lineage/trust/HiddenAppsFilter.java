@@ -24,7 +24,6 @@ import com.android.launcher3.AppFilter;
 
 import javax.inject.Inject;
 
-@SuppressWarnings("unused")
 public class HiddenAppsFilter extends AppFilter {
 
     private final Context mContext;

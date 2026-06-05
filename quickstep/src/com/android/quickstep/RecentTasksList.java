@@ -418,6 +418,9 @@ public class RecentTasksList {
                 if (DesktopModeStatus.canEnterDesktopMode(mContext)) {
                     List<DesktopTask> desktopTasks = createDesktopTasks(
                             rawTask.getBaseGroupedTask());
+                    desktopTasks = desktopTasks.stream()
+                            .filter(dt -> !dt.getTasks().isEmpty())
+                            .collect(Collectors.toList());
                     allTasks.addAll(desktopTasks);
 
                     // If any task in desktop group task is visible, set isFirstVisibleTaskFound to
@@ -434,12 +437,18 @@ public class RecentTasksList {
             // [getTaskInfo1] will not be null for types below beside [TYPE_DESK].
             if (Flags.enableShellTopTaskTracking()) {
                 final TaskInfo taskInfo1 = rawTask.getBaseGroupedTask().getTaskInfo1();
+                if (shouldExcludeTaskInfo(taskInfo1)) {
+                    continue;
+                }
                 final Task.TaskKey task1Key = createTaskKey(taskInfo1);
                 final Task task1 = Task.from(task1Key, taskInfo1,
                         computeTaskLocked(task1Key, tmpLockedUsers));
 
                 if (rawTask.isBaseType(TYPE_SPLIT)) {
                     final TaskInfo taskInfo2 = rawTask.getBaseGroupedTask().getTaskInfo2();
+                    if (shouldExcludeTaskInfo(taskInfo2)) {
+                        continue;
+                    }
                     final Task.TaskKey task2Key = createTaskKey(taskInfo2);
                     final Task task2 = Task.from(task2Key, taskInfo2,
                             computeTaskLocked(task2Key, tmpLockedUsers));
@@ -450,7 +459,13 @@ public class RecentTasksList {
                 }
             } else {
                 TaskInfo taskInfo1 = rawTask.getTaskInfo1();
+                if (shouldExcludeTaskInfo(taskInfo1)) {
+                    continue;
+                }
                 TaskInfo taskInfo2 = rawTask.getTaskInfo2();
+                if (taskInfo2 != null && shouldExcludeTaskInfo(taskInfo2)) {
+                    continue;
+                }
                 Task.TaskKey task1Key = createTaskKey(taskInfo1);
                 Task task1 = loadKeysOnly
                         ? new Task(task1Key)
@@ -491,6 +506,20 @@ public class RecentTasksList {
         return allTasks;
     }
 
+    private boolean shouldExcludeTaskInfo(TaskInfo taskInfo) {
+        if (taskInfo == null) {
+            return false;
+        }
+        String pkg = null;
+        if (taskInfo.baseIntent != null && taskInfo.baseIntent.getComponent() != null) {
+            pkg = taskInfo.baseIntent.getComponent().getPackageName();
+        } else if (taskInfo.baseActivity != null) {
+            pkg = taskInfo.baseActivity.getPackageName();
+        }
+        return pkg != null
+                && RecentHelper.getInstance().shouldExcludeFromRecents(pkg, mContext);
+    }
+
     /** Device keyguard lock and/or masked apps (App Lock + legacy recents lock). */
     private boolean computeTaskLocked(Task.TaskKey key, SparseBooleanArray tmpLockedUsers) {
         String pkg = key.getPackageName();
@@ -528,6 +557,9 @@ public class RecentTasksList {
             // all displays.
             Map<Integer, List<Task>> perDisplayTasks = new HashMap<>();
             for (TaskInfo taskInfo : recentTaskInfo.getTaskInfoList()) {
+                if (shouldExcludeTaskInfo(taskInfo)) {
+                    continue;
+                }
                 Task task = createTask(taskInfo, minimizedTaskIds);
                 List<Task> tasks = perDisplayTasks.computeIfAbsent(
                         ExternalDisplaysKt.getSafeDisplayId(task),
@@ -542,8 +574,13 @@ public class RecentTasksList {
         } else {
             final int deskId = recentTaskInfo.getDeskId();
             final int displayId = recentTaskInfo.getDeskDisplayId();
-            List<Task> tasks = CollectionsKt.map(recentTaskInfo.getTaskInfoList(),
+            List<Task> tasks = CollectionsKt.map(
+                    CollectionsKt.filter(recentTaskInfo.getTaskInfoList(),
+                            taskInfo -> !shouldExcludeTaskInfo(taskInfo)),
                     it -> createTask(it, minimizedTaskIds));
+            if (tasks.isEmpty()) {
+                return List.of();
+            }
             return List.of(new DesktopTask(deskId, displayId, tasks));
         }
     }

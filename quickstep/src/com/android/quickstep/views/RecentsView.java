@@ -1299,6 +1299,7 @@ public abstract class RecentsView<
         }
         RecentHelper.getInstance().registerAppLockListener(mContext, this::invalidateTaskList);
         RecentHelper.getInstance().registerLegacyLockListener(mContext, this::invalidateTaskList);
+        RecentHelper.getInstance().registerHiddenAppsListener(mContext, this::invalidateTaskList);
     }
 
     @Override

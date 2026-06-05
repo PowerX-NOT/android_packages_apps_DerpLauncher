@@ -3,13 +3,19 @@ package com.android.quickstep.util;
 import static android.app.ActivityManager.RECENT_IGNORE_UNAVAILABLE;
 
 import android.app.AppLockManager;
+import android.app.HiddenAppsManager;
 import android.content.Context;
+import android.database.ContentObserver;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Process;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.android.internal.app.IAppLockStateListener;
+import com.android.launcher3.lineage.trust.HiddenAppsFilter;
 import static com.android.quickstep.LauncherLockedStateController.TASK_LOCK_LIST_KEY_WITH_USERID;
 import static com.android.quickstep.LauncherLockedStateController.TASK_LOCK_STATE;
 
@@ -39,6 +45,8 @@ public class RecentHelper {
     private final Set<String> mLockedPackagesCache = new HashSet<>();
     private boolean mListenerRegistered;
     private boolean mLegacyLockListenerRegistered;
+    private boolean mHiddenAppsListenerRegistered;
+    private ContentObserver mHiddenAppsObserver;
 
     public static RecentHelper getInstance() {
         if (sInstance == null) {
@@ -115,6 +123,29 @@ public class RecentHelper {
     /** True when a recents card should show the privacy mask overlay. */
     public boolean shouldMaskInRecents(String packageName, Context context) {
         return isAppLocked(packageName, context);
+    }
+
+    /** True when a package should be omitted from the recents overview entirely. */
+    public boolean shouldExcludeFromRecents(String packageName, Context context) {
+        return HiddenAppsFilter.shouldHidePackage(context, packageName);
+    }
+
+    public void registerHiddenAppsListener(Context context, Runnable onChange) {
+        if (mHiddenAppsListenerRegistered) {
+            return;
+        }
+        Context appContext = context.getApplicationContext();
+        mHiddenAppsObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
+            @Override
+            public void onChange(boolean selfChange) {
+                onChange.run();
+            }
+        };
+        appContext.getContentResolver().registerContentObserver(
+                Settings.Secure.getUriFor(HiddenAppsManager.SETTING_CONFIG),
+                false,
+                mHiddenAppsObserver);
+        mHiddenAppsListenerRegistered = true;
     }
 
     public void registerLegacyLockListener(Context context, Runnable onChange) {
